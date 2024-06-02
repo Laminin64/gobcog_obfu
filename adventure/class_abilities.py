@@ -732,7 +732,6 @@ class ClassAbilities(AdventureMixin):
                             physical_roll = 0.8
                             magic_roll = 0.6
                             diplo_roll = 0.4
-
                         if roll == 1:
                             hp = int(hp * self.ATTRIBS[session.attribute][0])
                             dipl = int(diplo * self.ATTRIBS[session.attribute][1])
@@ -751,8 +750,8 @@ class ClassAbilities(AdventureMixin):
                             )
                             self._sessions[ctx.guild.id].exposed = True
                         elif roll >= 0.95:
-                            hp = hp * self.ATTRIBS[session.attribute][0]
-                            dipl = diplo * self.ATTRIBS[session.attribute][1]
+                            hp = int(hp * self.ATTRIBS[session.attribute][0])
+                            dipl = int(diplo * self.ATTRIBS[session.attribute][1])
                             msg += _(
                                 "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}).\n"
                             ).format(
@@ -765,7 +764,7 @@ class ClassAbilities(AdventureMixin):
                             )
                             self._sessions[ctx.guild.id].exposed = True
                         elif roll >= 0.80:
-                            hp = hp * self.ATTRIBS[session.attribute][0]
+                            hp = int(hp * self.ATTRIBS[session.attribute][0])
                             msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
                                 challenge=session.challenge,
                                 attr=session.attribute,
