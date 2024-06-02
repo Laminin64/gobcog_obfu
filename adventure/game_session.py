@@ -244,32 +244,28 @@ class SpecialActionButton(discord.ui.Button):
         if c.heroclass["cooldown"] + cooldown_time <= time.time():
             max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 20 else 20
             roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
+            if roll < 0:
+                roll = 0
             if self.view.insight[0] < roll:
                 self.view.insight = roll, c
                 good = True
             else:
                 good = False
                 msg = _("Another hero has already done a better job than you.")
-                await smart_embed(
-                    interaction,
-                    _("Another hero has already done a better job than you."),
-                    ephemeral=True,
-                    cog=self.view.cog,
-                )
+                await smart_embed(interaction=interaction, message=msg, ephemeral=True, cog=self.view.cog)
             c.heroclass["ability"] = True
             c.heroclass["cooldown"] = time.time()
-            async with self.view.cog.get_lock(c.user):
-                await self.view.cog.config.user(user).set(await c.to_json(self.view.ctx, self.view.cog.config))
-                if good:
-                    msg = _("{skill} **{c}** is focusing on the monster ahead...{skill}").format(
-                        c=escape(user.display_name),
-                        skill=self.view.cog.emojis.skills.psychic,
-                    )
-                    await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
+            await self.view.cog.config.user(user).set(await c.to_json(self.view.ctx, self.view.cog.config))
             if good:
+                msg = _("{skill} **{c}** is focusing on the monster ahead...{skill}").format(
+                    c=escape(user.display_name),
+                    skill=self.view.cog.emojis.skills.psychic,
+                )
+                await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
                 session = self.view
                 if roll <= 0.4:
-                    return await smart_embed(interaction, _("You suck."), cog=self.view.cog)
+                    msg = _("You can't seem to focus on the fight ahead.")
+                    return await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
                 msg = ""
                 if session.no_monster:
                     if roll >= 0.4:
@@ -280,6 +276,19 @@ class SpecialActionButton(discord.ui.Button):
                     cdef = session.monster_modified_stats.get("cdef", 1.0)
                     hp = session.monster_modified_stats["hp"]
                     diplo = session.monster_modified_stats["dipl"]
+                    choice = random.choice(["physical", "magic", "diplomacy"])
+                    if choice == "physical":
+                        physical_roll = 0.4
+                        magic_roll = 0.6
+                        diplo_roll = 0.8
+                    elif choice == "magic":
+                        physical_roll = 0.8
+                        magic_roll = 0.4
+                        diplo_roll = 0.6
+                    else:
+                        physical_roll = 0.8
+                        magic_roll = 0.6
+                        diplo_roll = 0.4
                     if roll == 1:
                         hp = int(hp * self.ATTRIBS[session.attribute][0])
                         dipl = int(diplo * self.ATTRIBS[session.attribute][1])
