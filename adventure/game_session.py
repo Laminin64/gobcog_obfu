@@ -289,17 +289,18 @@ class SpecialActionButton(discord.ui.Button):
                         physical_roll = 0.8
                         magic_roll = 0.6
                         diplo_roll = 0.4
+                    print(self.view.cog.ATTRIBS[session.attribute][0])
                     if roll == 1:
-                        hp = int(hp * self.ATTRIBS[session.attribute][0])
-                        dipl = int(diplo * self.ATTRIBS[session.attribute][1])
+                        hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0])
+                        dipl = int(diplo * self.view.cog.ATTRIBS[session.attribute][1])
                         msg += _(
                             "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}){trans}.\n"
                         ).format(
                             challenge=session.challenge,
                             attr=session.attribute,
-                            hp_symbol=self.emojis.hp,
+                            hp_symbol=self.view.cog.emojis.hp,
                             hp=humanize_number(ceil(hp)),
-                            dipl_symbol=self.emojis.dipl,
+                            dipl_symbol=self.view.cog.emojis.dipl,
                             dipl=humanize_number(ceil(dipl)),
                             trans=f" (**Transcended**) {self.view.cog.emojis.skills.psychic}"
                             if session.transcended
@@ -307,25 +308,25 @@ class SpecialActionButton(discord.ui.Button):
                         )
                         self.view.exposed = True
                     elif roll >= 0.95:
-                        hp = hp * self.ATTRIBS[session.attribute][0]
-                        dipl = diplo * self.ATTRIBS[session.attribute][1]
+                        hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0])
+                        dipl = int(diplo * self.view.cog.ATTRIBS[session.attribute][1])
                         msg += _(
                             "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}).\n"
                         ).format(
                             challenge=session.challenge,
                             attr=session.attribute,
-                            hp_symbol=self.emojis.hp,
+                            hp_symbol=self.view.cog.emojis.hp,
                             hp=humanize_number(ceil(hp)),
-                            dipl_symbol=self.emojis.dipl,
+                            dipl_symbol=self.view.cog.emojis.dipl,
                             dipl=humanize_number(ceil(dipl)),
                         )
                         self.view.exposed = True
                     elif roll >= 0.90:
-                        hp = hp * self.ATTRIBS[session.attribute][0]
+                        hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0])
                         msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
                             challenge=session.challenge,
                             attr=session.attribute,
-                            hp_symbol=self.emojis.hp,
+                            hp_symbol=self.view.cog.emojis.hp,
                             hp=humanize_number(ceil(hp)),
                         )
                         self.view.exposed = True
@@ -375,7 +376,6 @@ class SpecialActionButton(discord.ui.Button):
                             msg += _("This creature **can be reasoned** with!\n")
                         else:
                             msg += _("This monster can be **easily influenced!**\n")
-
                 if msg:
                     image = None
                     if roll >= 0.4:
