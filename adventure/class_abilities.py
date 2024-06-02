@@ -685,6 +685,8 @@ class ClassAbilities(AdventureMixin):
             if c.heroclass["cooldown"] + cooldown_time <= time.time():
                 max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 20 else 20
                 roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
+                if roll < 0:
+                    roll = 0
                 if ctx.guild.id in self._sessions and self._sessions[ctx.guild.id].insight[0] < roll:
                     self._sessions[ctx.guild.id].insight = roll, c
                     good = True
