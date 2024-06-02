@@ -242,7 +242,7 @@ class SpecialActionButton(discord.ui.Button):
         if "cooldown" not in c.heroclass:
             c.heroclass["cooldown"] = cooldown_time + 1
         if c.heroclass["cooldown"] + cooldown_time <= time.time():
-            max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 15 else 20
+            max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 20 else 20
             roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
             if self.view.insight[0] < roll:
                 self.view.insight = roll, c
