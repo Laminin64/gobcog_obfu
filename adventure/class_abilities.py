@@ -683,8 +683,10 @@ class ClassAbilities(AdventureMixin):
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
             if c.heroclass["cooldown"] + cooldown_time <= time.time():
-                max_roll = 100 if c.rebirths >= 30 else 75 if c.rebirths >= 20 else 50 if c.rebirths >= 10 else 25
-                roll = random.randint(min(c.rebirths // 2, (max_roll // 2)), max_roll) / max_roll
+                max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 20 else 20
+                roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
+                if roll < 0:
+                    roll = 0
                 if ctx.guild.id in self._sessions and self._sessions[ctx.guild.id].insight[0] < roll:
                     self._sessions[ctx.guild.id].insight = roll, c
                     good = True
@@ -732,8 +734,8 @@ class ClassAbilities(AdventureMixin):
                             diplo_roll = 0.4
 
                         if roll == 1:
-                            hp = int(hp * self.ATTRIBS[session.attribute][0] * session.monster_stats)
-                            dipl = int(diplo * self.ATTRIBS[session.attribute][1] * session.monster_stats)
+                            hp = int(hp * self.ATTRIBS[session.attribute][0])
+                            dipl = int(diplo * self.ATTRIBS[session.attribute][1])
                             msg += _(
                                 "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}){trans}.\n"
                             ).format(
@@ -749,8 +751,8 @@ class ClassAbilities(AdventureMixin):
                             )
                             self._sessions[ctx.guild.id].exposed = True
                         elif roll >= 0.95:
-                            hp = hp * self.ATTRIBS[session.attribute][0] * session.monster_stats
-                            dipl = diplo * self.ATTRIBS[session.attribute][1] * session.monster_stats
+                            hp = hp * self.ATTRIBS[session.attribute][0]
+                            dipl = diplo * self.ATTRIBS[session.attribute][1]
                             msg += _(
                                 "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}).\n"
                             ).format(
@@ -762,8 +764,8 @@ class ClassAbilities(AdventureMixin):
                                 dipl=humanize_number(int(dipl)),
                             )
                             self._sessions[ctx.guild.id].exposed = True
-                        elif roll >= 0.90:
-                            hp = hp * self.ATTRIBS[session.attribute][0] * session.monster_stats
+                        elif roll >= 0.80:
+                            hp = hp * self.ATTRIBS[session.attribute][0]
                             msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
                                 challenge=session.challenge,
                                 attr=session.attribute,
