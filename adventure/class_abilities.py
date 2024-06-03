@@ -452,7 +452,7 @@ class ClassAbilities(AdventureMixin):
                             if force_catch:
                                 roll = 0
                             else:
-                                roll = random.randint(0, (1 if roll in range(25, 50) else 4))
+                                roll = random.randint(0, (1 if roll in range(24, 51) else 4))
                             if roll == 0:
                                 if force_catch and any(x in c.sets for x in ["The Supreme One", "Ainz Ooal Gown"]):
                                     msg = random.choice(
