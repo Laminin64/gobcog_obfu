@@ -118,5 +118,11 @@
         {"upgrades": 5, "att": 1000, "cha": 50, "int": 10, "dex": 20, "luck": 20, "statmult": 1.0, "xpmult": 1.35, "cpmult": 1.1},
         {"upgrades": 10, "att": 1000, "cha": 100, "int": 10, "dex": 50, "luck": 50, "statmult": 1.05, "xpmult": 1.55, "cpmult": 1.25},
         {"upgrades": 20, "att": 1000, "cha": 210, "int": 10, "dex": 75, "luck": 75, "statmult": 1.1, "xpmult": 1.75, "cpmult": 1.5}
+    ],
+    "Blind Mage": [
+        {"upgrades": 3, "att": -100, "cha": 0, "int": 100, "dex": 0, "luck": 10, "statmult": 1.2, "xpmult": 1.1, "cpmult": 0.9},
+        {"upgrades": 5, "att": -100, "cha": 10, "int": 125, "dex": 5, "luck": 20, "statmult": 1.25, "xpmult": 1.1, "cpmult": 1.0},
+        {"upgrades": 10, "att": 50, "cha": 25, "int": 150, "dex": 10, "luck": 40, "statmult": 1.4, "xpmult": 1.25, "cpmult": 1.2},
+        {"upgrades": 20, "att": 100, "cha": 50, "int": 200, "dex": 20, "luck": 60, "statmult": 1.5, "xpmult": 1.4, "cpmult": 1.4}
     ]
 }
