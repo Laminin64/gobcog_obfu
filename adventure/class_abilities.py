@@ -446,13 +446,13 @@ class ClassAbilities(AdventureMixin):
                         bonus = ""
                         if roll == 1:
                             bonus = _("They approach the creature but trips over their own foot. How embarrassing.")
-                        elif roll in [50, 25]:
+                        elif roll in range(25, 50):
                             bonus = _("They try to lure the the creature in with some delicious morsels of food.")
                         if force_catch or (dipl_value > pet_list[pet]["cha"] and roll > 1 and can_catch):
                             if force_catch:
                                 roll = 0
                             else:
-                                roll = random.randint(0, (1 if roll in [50, 25] else 4))
+                                roll = random.randint(0, (1 if roll in range(25, 50) else 4))
                             if roll == 0:
                                 if force_catch and any(x in c.sets for x in ["The Supreme One", "Ainz Ooal Gown"]):
                                     msg = random.choice(
