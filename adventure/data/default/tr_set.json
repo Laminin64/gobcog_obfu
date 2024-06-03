@@ -156,5 +156,5 @@
     "Mage Tunic": {"slot": ["chest"], "set": "Blind Mage", "parts": 5, "att": -5, "cha": 5, "int": 10, "dex": 0, "luck": 3, "setlevel": 79, "rarity": "set"},
     "Mage Pants": {"slot": ["legs"], "set": "Blind Mage", "parts": 5, "att": -5, "cha": 5, "int": 10, "dex": 0, "luck": 3, "setlevel": 79, "rarity": "set"},
     "Mage Sandals": {"slot": ["boots"], "set": "Blind Mage", "parts": 5, "att": -5, "cha": 5, "int": 10, "dex": 0, "luck": 3, "setlevel": 79, "rarity": "set"},
-    "Staff of Blinding Light": {"slot": ["left", "right"], "set": "Blind Mage", "parts": 5, "att": -10, "cha": 10, "int": 20, "dex": 0, "luck": 6, "setlevel": 79, "rarity": "set"}
+    "Staff of Blinding Light": {"slot": ["left", "right"], "set": "Blind Mage", "parts": 5, "att": -10, "cha": 5, "int": 10, "dex": 0, "luck": 3, "setlevel": 79, "rarity": "set"}
 }
