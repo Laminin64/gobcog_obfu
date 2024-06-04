@@ -289,7 +289,6 @@ class SpecialActionButton(discord.ui.Button):
                         physical_roll = 0.8
                         magic_roll = 0.6
                         diplo_roll = 0.4
-                    print(self.view.cog.ATTRIBS[session.attribute][0])
                     if roll == 1:
                         hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0])
                         dipl = int(diplo * self.view.cog.ATTRIBS[session.attribute][1])
