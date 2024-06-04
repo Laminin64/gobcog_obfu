@@ -238,164 +238,163 @@ class SpecialActionButton(discord.ui.Button):
         if c.heroclass["ability"]:
             await self.send_in_use(interaction)
             return
-        cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
-        if "cooldown" not in c.heroclass:
-            c.heroclass["cooldown"] = cooldown_time + 1
-        if c.heroclass["cooldown"] + cooldown_time <= time.time():
-            max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 20 else 20
-            roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
-            if roll < 0:
-                roll = 0
-            if self.view.insight[0] < roll:
-                self.view.insight = roll, c
-                good = True
-            else:
-                good = False
-                msg = _("Another hero has already done a better job than you.")
-                await smart_embed(interaction=interaction, message=msg, ephemeral=True, cog=self.view.cog)
-            c.heroclass["ability"] = True
-            c.heroclass["cooldown"] = time.time()
-            await self.view.cog.config.user(user).set(await c.to_json(self.view.ctx, self.view.cog.config))
-            if good:
-                msg = _("{skill} **{c}** is focusing on the monster ahead...{skill}").format(
-                    c=escape(user.display_name),
-                    skill=self.view.cog.emojis.skills.psychic,
-                )
-                await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
-                session = self.view
-                if roll <= 0.4:
-                    msg = _("You can't seem to focus on the fight ahead.")
-                    return await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
-                msg = ""
-                if session.no_monster:
-                    if roll >= 0.4:
-                        msg += _("You are struggling to find anything in your current adventure.")
+        else:
+            cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
+            if "cooldown" not in c.heroclass:
+                c.heroclass["cooldown"] = cooldown_time + 1
+            if c.heroclass["cooldown"] <= time.time():
+                c.heroclass["ability"] = True
+                c.heroclass["cooldown"] = time.time() + cooldown_time
+                max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 20 else 20
+                roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
+                if roll < 0:
+                    roll = 0
+                if self.view.insight[0] < roll:
+                    self.view.insight = roll, c
+                    good = True
                 else:
-                    pdef = session.monster_modified_stats["pdef"]
-                    mdef = session.monster_modified_stats["mdef"]
-                    cdef = session.monster_modified_stats.get("cdef", 1.0)
-                    hp = session.monster_modified_stats["hp"]
-                    diplo = session.monster_modified_stats["dipl"]
-                    choice = random.choice(["physical", "magic", "diplomacy"])
-                    if choice == "physical":
-                        physical_roll = 0.4
-                        magic_roll = 0.6
-                        diplo_roll = 0.8
-                    elif choice == "magic":
-                        physical_roll = 0.8
-                        magic_roll = 0.4
-                        diplo_roll = 0.6
+                    good = False
+                    msg = _("Another hero has already done a better job than you.")
+                    await smart_embed(interaction=interaction, message=msg, ephemeral=True, cog=self.view.cog)
+                await self.view.cog.config.user(user).set(await c.to_json(self.view.ctx, self.view.cog.config))
+                if good:
+                    msg = _("{skill} **{c}** is focusing on the monster ahead...{skill}").format(
+                        c=escape(user.display_name),
+                        skill=self.view.cog.emojis.skills.psychic,
+                    )
+                    await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
+                    session = self.view
+                    if roll <= 0.4:
+                        msg = _("You can't seem to focus on the fight ahead.")
+                        return await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
+                    msg = ""
+                    if session.no_monster:
+                        if roll >= 0.4:
+                            msg += _("You are struggling to find anything in your current adventure.")
                     else:
-                        physical_roll = 0.8
-                        magic_roll = 0.6
-                        diplo_roll = 0.4
-                    print(self.view.cog.ATTRIBS[session.attribute][0])
-                    if roll == 1:
-                        hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0])
-                        dipl = int(diplo * self.view.cog.ATTRIBS[session.attribute][1])
-                        msg += _(
-                            "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}){trans}.\n"
-                        ).format(
-                            challenge=session.challenge,
-                            attr=session.attribute,
-                            hp_symbol=self.view.cog.emojis.hp,
-                            hp=humanize_number(ceil(hp)),
-                            dipl_symbol=self.view.cog.emojis.dipl,
-                            dipl=humanize_number(ceil(dipl)),
-                            trans=f" (**Transcended**) {self.view.cog.emojis.skills.psychic}"
-                            if session.transcended
-                            else f"{self.view.cog.emojis.skills.psychic}",
-                        )
-                        self.view.exposed = True
-                    elif roll >= 0.95:
-                        hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0])
-                        dipl = int(diplo * self.view.cog.ATTRIBS[session.attribute][1])
-                        msg += _(
-                            "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}).\n"
-                        ).format(
-                            challenge=session.challenge,
-                            attr=session.attribute,
-                            hp_symbol=self.view.cog.emojis.hp,
-                            hp=humanize_number(ceil(hp)),
-                            dipl_symbol=self.view.cog.emojis.dipl,
-                            dipl=humanize_number(ceil(dipl)),
-                        )
-                        self.view.exposed = True
-                    elif roll >= 0.90:
-                        hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0])
-                        msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
-                            challenge=session.challenge,
-                            attr=session.attribute,
-                            hp_symbol=self.view.cog.emojis.hp,
-                            hp=humanize_number(ceil(hp)),
-                        )
-                        self.view.exposed = True
-                    elif roll > 0.75:
-                        msg += _("This monster is **a{attr} {challenge}**.\n").format(
-                            challenge=session.challenge,
-                            attr=session.attribute,
-                        )
-                        self.view.exposed = True
-                    elif roll > 0.5:
-                        msg += _("This monster is **a {challenge}**.\n").format(
-                            challenge=session.challenge,
-                        )
-                        self.view.exposed = True
-                    if roll >= 0.4:
-                        if pdef >= 1.5:
-                            msg += _("Swords bounce off this monster as it's skin is **almost impenetrable!**\n")
-                        elif pdef >= 1.25:
-                            msg += _("This monster has **extremely tough** armour!\n")
-                        elif pdef > 1:
-                            msg += _("Swords don't cut this monster **quite as well!**\n")
-                        elif pdef > 0.75:
-                            msg += _("This monster is **soft and easy** to slice!\n")
+                        pdef = session.monster_modified_stats["pdef"]
+                        mdef = session.monster_modified_stats["mdef"]
+                        cdef = session.monster_modified_stats.get("cdef", 1.0)
+                        hp = session.monster_modified_stats["hp"]
+                        diplo = session.monster_modified_stats["dipl"]
+                        choice = random.choice(["physical", "magic", "diplomacy"])
+                        if choice == "physical":
+                            physical_roll = 0.4
+                            magic_roll = 0.6
+                            diplo_roll = 0.8
+                        elif choice == "magic":
+                            physical_roll = 0.8
+                            magic_roll = 0.4
+                            diplo_roll = 0.6
                         else:
-                            msg += _("Swords slice through this monster like a **hot knife through butter!**\n")
-                    if roll >= 0.6:
-                        if mdef >= 1.5:
-                            msg += _("Magic? Pfft, magic is **no match** for this creature!\n")
-                        elif mdef >= 1.25:
-                            msg += _("This monster has **substantial magic resistance!**\n")
-                        elif mdef > 1:
-                            msg += _("This monster has increased **magic resistance!**\n")
-                        elif mdef > 0.75:
-                            msg += _("This monster's hide **melts to magic!**\n")
-                        else:
-                            msg += _("Magic spells are **hugely effective** against this monster!\n")
-                    if roll >= 0.8:
-                        if cdef >= 1.5:
+                            physical_roll = 0.8
+                            magic_roll = 0.6
+                            diplo_roll = 0.4
+                        if roll == 1:
+                            hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0])
+                            dipl = int(diplo * self.view.cog.ATTRIBS[session.attribute][1])
                             msg += _(
-                                "You think you are charismatic? Pfft, this creature couldn't care less for what you want to say!\n"
+                                "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}){trans}.\n"
+                            ).format(
+                                challenge=session.challenge,
+                                attr=session.attribute,
+                                hp_symbol=self.view.cog.emojis.hp,
+                                hp=humanize_number(ceil(hp)),
+                                dipl_symbol=self.view.cog.emojis.dipl,
+                                dipl=humanize_number(ceil(dipl)),
+                                trans=f" (**Transcended**) {self.view.cog.emojis.skills.psychic}"
+                                if session.transcended
+                                else f"{self.view.cog.emojis.skills.psychic}",
                             )
-                        elif cdef >= 1.25:
-                            msg += _("Any attempts to communicate with this creature will be **very difficult!**\n")
-                        elif cdef > 1:
-                            msg += _("Any attempts to talk to this creature will be **difficult!**\n")
-                        elif cdef > 0.75:
-                            msg += _("This creature **can be reasoned** with!\n")
-                        else:
-                            msg += _("This monster can be **easily influenced!**\n")
-                if msg:
-                    image = None
-                    if roll >= 0.4:
-                        image = session.monster["image"]
-                    return await smart_embed(
-                        ctx=None,
-                        message=msg,
-                        success=True,
-                        image=image,
-                        cog=self.view.cog,
-                        interaction=interaction,
-                    )
-                else:
-                    return await smart_embed(
-                        ctx=None,
-                        message=_("You have failed to discover anything about this monster."),
-                        success=False,
-                        cog=self.view.cog,
-                        interaction=interaction,
-                    )
+                            self.view.exposed = True
+                        elif roll >= 0.95:
+                            hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0])
+                            dipl = int(diplo * self.view.cog.ATTRIBS[session.attribute][1])
+                            msg += _(
+                                "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}).\n"
+                            ).format(
+                                challenge=session.challenge,
+                                attr=session.attribute,
+                                hp_symbol=self.view.cog.emojis.hp,
+                                hp=humanize_number(ceil(hp)),
+                                dipl_symbol=self.view.cog.emojis.dipl,
+                                dipl=humanize_number(ceil(dipl)),
+                            )
+                            self.view.exposed = True
+                        elif roll >= 0.90:
+                            hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0])
+                            msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
+                                challenge=session.challenge,
+                                attr=session.attribute,
+                                hp_symbol=self.view.cog.emojis.hp,
+                                hp=humanize_number(ceil(hp)),
+                            )
+                            self.view.exposed = True
+                        elif roll > 0.75:
+                            msg += _("This monster is **a{attr} {challenge}**.\n").format(
+                                challenge=session.challenge,
+                                attr=session.attribute,
+                            )
+                            self.view.exposed = True
+                        elif roll > 0.5:
+                            msg += _("This monster is **a {challenge}**.\n").format(
+                                challenge=session.challenge,
+                            )
+                            self.view.exposed = True
+                        if roll >= 0.4:
+                            if pdef >= 1.5:
+                                msg += _("Swords bounce off this monster as it's skin is **almost impenetrable!**\n")
+                            elif pdef >= 1.25:
+                                msg += _("This monster has **extremely tough** armour!\n")
+                            elif pdef > 1:
+                                msg += _("Swords don't cut this monster **quite as well!**\n")
+                            elif pdef > 0.75:
+                                msg += _("This monster is **soft and easy** to slice!\n")
+                            else:
+                                msg += _("Swords slice through this monster like a **hot knife through butter!**\n")
+                        if roll >= 0.6:
+                            if mdef >= 1.5:
+                                msg += _("Magic? Pfft, magic is **no match** for this creature!\n")
+                            elif mdef >= 1.25:
+                                msg += _("This monster has **substantial magic resistance!**\n")
+                            elif mdef > 1:
+                                msg += _("This monster has increased **magic resistance!**\n")
+                            elif mdef > 0.75:
+                                msg += _("This monster's hide **melts to magic!**\n")
+                            else:
+                                msg += _("Magic spells are **hugely effective** against this monster!\n")
+                        if roll >= 0.8:
+                            if cdef >= 1.5:
+                                msg += _(
+                                    "You think you are charismatic? Pfft, this creature couldn't care less for what you want to say!\n"
+                                )
+                            elif cdef >= 1.25:
+                                msg += _("Any attempts to communicate with this creature will be **very difficult!**\n")
+                            elif cdef > 1:
+                                msg += _("Any attempts to talk to this creature will be **difficult!**\n")
+                            elif cdef > 0.75:
+                                msg += _("This creature **can be reasoned** with!\n")
+                            else:
+                                msg += _("This monster can be **easily influenced!**\n")
+                    if msg:
+                        if roll >= 0.4 and not session.no_monster:
+                            image = session.monster["image"]
+                            return await smart_embed(
+                                ctx=None,
+                                message=msg,
+                                success=True,
+                                image=image,
+                                cog=self.view.cog,
+                                interaction=interaction,
+                            )
+                    else:
+                        return await smart_embed(
+                            ctx=None,
+                            message=_("You have failed to discover anything about this monster."),
+                            success=False,
+                            cog=self.view.cog,
+                            interaction=interaction,
+                        )
             else:
                 await self.send_cooldown(interaction, c, cooldown_time)
 
