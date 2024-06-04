@@ -682,7 +682,9 @@ class ClassAbilities(AdventureMixin):
             cooldown_time = max(300, (900 - max((c.luck + c.total_int) * 2, 0)))
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
-            if c.heroclass["cooldown"] + cooldown_time <= time.time():
+            if c.heroclass["cooldown"] <= time.time():
+                c.heroclass["ability"] = True
+                c.heroclass["cooldown"] = time.time() + cooldown_time
                 max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 20 else 20
                 roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
                 if roll < 0:
@@ -693,8 +695,6 @@ class ClassAbilities(AdventureMixin):
                 else:
                     good = False
                     await smart_embed(ctx, _("Another hero has already done a better job than you."))
-                c.heroclass["ability"] = True
-                c.heroclass["cooldown"] = time.time()
                 async with self.get_lock(c.user):
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     if good:
@@ -819,15 +819,12 @@ class ClassAbilities(AdventureMixin):
                                 msg += _("This creature **can be reasoned** with!\n")
                             else:
                                 msg += _("This monster can be **easily influenced!**\n")
-
                     if msg:
-                        image = None
                         if roll >= 0.4 and not session.no_monster:
                             image = session.monster["image"]
-                        return await smart_embed(ctx, msg, image=image)
+                            return await smart_embed(ctx, msg, image=image)
                     else:
                         return await smart_embed(ctx, _("You have failed to discover anything about this monster."))
-            else:
                 cooldown_time = (c.heroclass["cooldown"]) + cooldown_time - time.time()
                 return await smart_embed(
                     ctx,
