@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import random
 import re
 import time
 from enum import Enum
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import discord
 from discord.ext.commands import CheckFailure
@@ -15,6 +17,9 @@ from .charsheet import Character, Item
 from .constants import DEV_LIST, Rarities
 
 _ = Translator("Adventure", __file__)
+
+if TYPE_CHECKING:
+    from .abc import AdventureMixin
 
 
 async def _get_epoch(seconds: int):
@@ -33,7 +38,7 @@ async def smart_embed(
     success: Optional[bool] = None,
     image: Optional[str] = None,
     ephemeral: bool = False,
-    cog: Optional[Cog] = None,
+    cog: Optional[AdventureMixin] = None,
     interaction: Optional[discord.Interaction] = None,
     view: Optional[discord.ui.View] = discord.utils.MISSING,
     embed_colour: Optional[str] = None,
@@ -90,7 +95,7 @@ async def smart_embed(
 
 
 def check_running_adventure(ctx):
-    for (guild_id, session) in ctx.bot.get_cog("Adventure")._sessions.items():
+    for guild_id, session in ctx.bot.get_cog("Adventure")._sessions.items():
         user_ids: list = []
         options = ["fight", "magic", "talk", "pray", "run"]
         for i in options:

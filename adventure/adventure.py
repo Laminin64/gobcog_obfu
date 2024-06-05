@@ -792,7 +792,7 @@ class Adventure(
         if easy_mode:
             if transcended:
                 # Shows Transcended on Easy mode
-                new_challenge = _("Transcended {}").format(challenge.replace("Ascended", ""))
+                new_challenge = _("Transcended {}").format(challenge.replace("Ascended ", ""))
             no_monster = False
             if monster_roster[challenge]["boss"]:
                 timer = 60 * 5
@@ -2460,7 +2460,10 @@ class Adventure(
         word = "has" if len(userlist) == 1 else "have"
         if special:
             chest_str = special.get_ansi()
-            chest_type = box(_("{chest_str} treasure chest!").format(chest_str=chest_str), lang="ansi")
+            if len(special) > 1:
+                chest_type = box(_("{chest_str} treasure chests!").format(chest_str=chest_str), lang="ansi")
+            else:
+                chest_type = box(_("{chest_str} treasure chest!").format(chest_str=chest_str), lang="ansi")
             phrase += _(
                 "\n{b_reward} {word} been awarded {xp} xp and found "
                 "{cp} {currency_name} (split based on stats). "

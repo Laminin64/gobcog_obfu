@@ -51,7 +51,7 @@ class ClassAbilities(AdventureMixin):
         if clz is None:
             ctx.command.reset_cooldown(ctx)
             classes = box(
-                "\n".join(c.class_colour.as_str(c.class_name) for c in HeroClasses),
+                "\n".join(c.class_colour.as_str(c.class_name) for c in HeroClasses if c is not HeroClasses.hero),
                 lang="ansi",
             )
             await smart_embed(
@@ -559,12 +559,10 @@ class ClassAbilities(AdventureMixin):
                 c.heroclass["pet_cooldown"] = time.time() + cooldown_time
                 await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
             else:
-                cooldown_time = c.heroclass["pet_cooldown"] - time.time()
+                cooldown_time = c.heroclass["pet_cooldown"]
                 return await smart_embed(
                     ctx,
-                    _("This command is on cooldown. Try again in {}.").format(
-                        humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second")
-                    ),
+                    _("This command is on cooldown. Try again in {}.").format(f"<t:{cooldown_time}:R>"),
                 )
 
     @pet.command(name="free")
@@ -633,16 +631,14 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 else:
-                    cooldown_time = c.heroclass["cooldown"] - time.time()
+                    cooldown_time = c.heroclass["cooldown"]
                     return await smart_embed(
                         ctx,
                         _(
                             "Your hero is currently recovering from the last time "
                             "they used this skill or they have just changed their heroclass. "
                             "Try again in {}."
-                        ).format(
-                            humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second")
-                        ),
+                        ).format(f"<t:{cooldown_time}:R>"),
                     )
 
     @commands.hybrid_command()
@@ -683,8 +679,6 @@ class ClassAbilities(AdventureMixin):
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
             if c.heroclass["cooldown"] <= time.time():
-                c.heroclass["ability"] = True
-                c.heroclass["cooldown"] = time.time() + cooldown_time
                 max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 20 else 20
                 roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
                 if roll < 0:
@@ -695,6 +689,8 @@ class ClassAbilities(AdventureMixin):
                 else:
                     good = False
                     await smart_embed(ctx, _("Another hero has already done a better job than you."))
+                c.heroclass["ability"] = True
+                c.heroclass["cooldown"] = time.time() + cooldown_time
                 async with self.get_lock(c.user):
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     if good:
@@ -825,6 +821,7 @@ class ClassAbilities(AdventureMixin):
                             return await smart_embed(ctx, msg, image=image)
                     else:
                         return await smart_embed(ctx, _("You have failed to discover anything about this monster."))
+            else:
                 cooldown_time = (c.heroclass["cooldown"]) + cooldown_time - time.time()
                 return await smart_embed(
                     ctx,
@@ -832,9 +829,7 @@ class ClassAbilities(AdventureMixin):
                         "Your hero is currently recovering from the last time "
                         "they used this skill or they have just changed their heroclass. "
                         "Try again in {}."
-                    ).format(
-                        humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second")
-                    ),
+                    ).format(f"<t:{cooldown_time}:R>"),
                 )
 
     @commands.hybrid_command()
@@ -876,16 +871,14 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 else:
-                    cooldown_time = c.heroclass["cooldown"] - time.time()
+                    cooldown_time = c.heroclass["cooldown"]
                     return await smart_embed(
                         ctx,
                         _(
                             "Your hero is currently recovering from the last time "
                             "they used this skill or they have just changed their heroclass. "
                             "Try again in {}."
-                        ).format(
-                            humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second")
-                        ),
+                        ).format(f"<t:{cooldown_time}:R>"),
                     )
 
     @commands.hybrid_command()
@@ -928,15 +921,13 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 else:
-                    cooldown_time = c.heroclass["cooldown"] - time.time()
+                    cooldown_time = c.heroclass["cooldown"]
                     return await smart_embed(
                         ctx,
                         _(
                             "Your hero is currently recovering from the "
                             "last time they used this skill. Try again in {}."
-                        ).format(
-                            humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second")
-                        ),
+                        ).format(f"<t:{cooldown_time}:R>"),
                     )
 
     @commands.hybrid_command()
@@ -977,16 +968,14 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 else:
-                    cooldown_time = c.heroclass["cooldown"] - time.time()
+                    cooldown_time = c.heroclass["cooldown"]
                     return await smart_embed(
                         ctx,
                         _(
                             "Your hero is currently recovering from the last time "
                             "they used this skill or they have just changed their heroclass. "
                             "Try again in {}."
-                        ).format(
-                            humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second")
-                        ),
+                        ).format(f"<t:{cooldown_time}:R>"),
                     )
 
     @commands.hybrid_command()
@@ -1028,15 +1017,13 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 else:
-                    cooldown_time = c.heroclass["cooldown"] - time.time()
+                    cooldown_time = c.heroclass["cooldown"]
                     return await smart_embed(
                         ctx,
                         _(
                             "Your hero is currently recovering from the "
                             "last time they used this skill. Try again in {}."
-                        ).format(
-                            humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second")
-                        ),
+                        ).format(f"<t:{cooldown_time}:R>"),
                     )
 
     @commands.max_concurrency(1, per=commands.BucketType.user)
@@ -1067,7 +1054,7 @@ class ClassAbilities(AdventureMixin):
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] > time.time():
-                    cooldown_time = c.heroclass["cooldown"] - time.time()
+                    cooldown_time = c.heroclass["cooldown"]
                     return await smart_embed(
                         ctx,
                         _("This command is on cooldown. Try again in {}").format(
