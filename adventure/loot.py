@@ -18,7 +18,7 @@ from .charsheet import Character, Item
 from .constants import Rarities, Slot
 from .converters import RarityConverter
 from .helpers import LootView, _sell, escape, is_dev, smart_embed
-from .menus import BaseMenu, BackpackSource
+from .menus import BackpackMenu, BackpackSource
 
 _ = Translator("Adventure", __file__)
 
