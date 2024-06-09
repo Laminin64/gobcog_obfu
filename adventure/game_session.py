@@ -3,7 +3,8 @@ from __future__ import annotations
 import logging
 import time
 from datetime import datetime
-from typing import List, Mapping, MutableMapping, Optional, Set, Tuple
+from enum import Enum
+from typing import Dict, List, Mapping, MutableMapping, Optional, Set, Tuple
 
 import discord
 from redbot.core.commands import Context
@@ -23,27 +24,39 @@ from .rng import Random
 _ = Translator("Adventure", __file__)
 log = logging.getLogger("red.cogs.adventure")
 
+class Action(Enum):
+    fight = 0
+    talk = 1
+    pray = 2
+    magic = 3
+    run = 4
+    auto = 5
 
-class BaseActionButton(discord.ui.Button):
-    def __init__(
-            self,
-            label,
-            action_type,
-            style: discord.ButtonStyle,
-            row: Optional[int] = None,
-    ):
-        super().__init__(label=label, style=style, row=row)
-        self.action_type = action_type
-        self.style = style
+    @property
+    def emoji(self):
+        return {
+            Action.fight: "\N{DAGGER KNIFE}\N{VARIATION SELECTOR-16}",
+            Action.talk: "\N{LEFT SPEECH BUBBLE}\N{VARIATION SELECTOR-16}",
+            Action.pray: "\N{PERSON WITH FOLDED HANDS}",
+            Action.magic: "\N{SPARKLES}",
+            Action.run: "\N{RUNNER}\N{ZERO WIDTH JOINER}\N{MALE SIGN}\N{VARIATION SELECTOR-16}",
+            Action.auto: "\N{CLOCKWISE RIGHTWARDS AND LEFTWARDS OPEN CIRCLE ARROWS}",
+        }[self]
 
-    async def send_response(self, interaction, action_type):
+
+class ActionButton(discord.ui.Button):
+    def __init__(self, action: Action):
+        self.action = action
+        super().__init__(label=self.action.name.title(), emoji=self.action.emoji)
+
+    async def send_response(self, interaction: discord.Interaction):
         user = interaction.user
         try:
             c = await Character.from_json(self.view.ctx, self.view.cog.config, user, self.view.cog._daily_bonus)
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             pass
-        choices = self.view.cog.ACTION_RESPONSE.get(action_type, {})
+        choices = self.view.cog.ACTION_RESPONSE.get(self.action.name, {})
         heroclass = c.hc.name
         pet = ""
         if c.hc is HeroClasses.ranger:
@@ -58,7 +71,6 @@ class BaseActionButton(discord.ui.Button):
         if await self.view.cog.config.guild(interaction.guild).god_name():
             god = await self.view.cog.config.guild(interaction.guild).god_name()
         choice = choice.replace("$god", god)
-
         if c.do_not_disturb:
             choice += (
                 "\n\nYou will not join the next battle automatically."
@@ -66,133 +78,27 @@ class BaseActionButton(discord.ui.Button):
             ).format(prefix=self.view.ctx.clean_prefix)
         await smart_embed(message=box(choice, lang="ansi"), ephemeral=True, interaction=interaction)
 
-    async def do_callback(self, interaction: discord.Interaction, other_actions: List[str], action_list, action_str):
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
         user = interaction.user
-        for x in other_actions:
-            if user in getattr(self.view, x, []):
-                getattr(self.view, x).remove(user)
-        if user not in action_list:
-            action_list.append(user)
-            await self.send_response(interaction, self.action_type)
+        for action in Action:
+            if action is self.action:
+                continue
+            if user in getattr(self.view, action.name, []):
+                getattr(self.view, action.name).remove(user)
+        if user not in getattr(self.view, self.action.name):
+            getattr(self.view, self.action.name).append(user)
+            await self.send_response(interaction)
             await self.view.update()
         else:
-            await interaction.response.defer()
-            view = ConfirmView(60, interaction.user)
-            msg = await interaction.followup.send(content=box(action_str + " Do you want to run away?"), view=view,
-                                                  ephemeral=True, wait=True)
-            await view.wait()
-            await msg.edit(view=None)
-            if view.confirmed:
-                action_list.remove(user)
-                await self.view.update()
-                await interaction.followup.send(box("{} ran away from the fight.").format(interaction.user.display_name))
-
-
-class AttackButton(BaseActionButton):
-    def __init__(
-            self,
-            style: discord.ButtonStyle,
-            row: Optional[int] = None,
-    ):
-        super().__init__(label="Attack", action_type="fight", style=style, row=row)
-        self.style = style
-        self.emoji = "\N{DAGGER KNIFE}\N{VARIATION SELECTOR-16}"
-        self.label_name = "Attack {} \u200b"
-
-    async def callback(self, interaction: discord.Interaction):
-        await self.do_callback(interaction, ["magic", "talk", "pray", "auto"], self.view.fight,
-                               "You are already fighting this monster.")
-
-
-class MagicButton(BaseActionButton):
-    def __init__(
-            self,
-            style: discord.ButtonStyle,
-            row: Optional[int] = None,
-    ):
-        super().__init__(label="Magic", action_type="magic", style=style, row=row)
-        self.style = style
-        self.emoji = "\N{SPARKLES}"
-        self.label_name = "\u200b Magic {} \u200b \u200b"
-
-    async def callback(self, interaction: discord.Interaction):
-        await self.do_callback(interaction, ["fight", "talk", "pray", "auto"], self.view.magic,
-                               "You have already cast a spell at this monster.")
-
-
-class TalkButton(BaseActionButton):
-    def __init__(
-            self,
-            style: discord.ButtonStyle,
-            row: Optional[int] = None,
-    ):
-        super().__init__(label="Talk", action_type="talk", style=style, row=row)
-        self.style = style
-        self.emoji = "\N{LEFT SPEECH BUBBLE}\N{VARIATION SELECTOR-16}"
-        self.label_name = "Talk {}"
-
-    async def callback(self, interaction: discord.Interaction):
-        await self.do_callback(interaction, ["fight", "magic", "pray", "auto"], self.view.talk,
-                               "You are already talking to this monster.")
-
-
-class PrayButton(BaseActionButton):
-    def __init__(
-            self,
-            style: discord.ButtonStyle,
-            row: Optional[int] = None,
-    ):
-        super().__init__(label="Pray", action_type="pray", style=style, row=row)
-        self.style = style
-        self.emoji = "\N{PERSON WITH FOLDED HANDS}"
-        self.action_type = "pray"
-        self.label_name = "Pray {}"
-
-    async def callback(self, interaction: discord.Interaction):
-        await self.do_callback(interaction, ["fight", "magic", "talk", "auto"],  self.view.pray,
-                               "You are already praying for help against this monster.")
-
-
-class AutoButton(BaseActionButton):
-    def __init__(
-            self,
-            style: discord.ButtonStyle,
-            row: Optional[int] = None,
-            initial_len=0
-    ):
-        initial_label = "Auto ({})".format(initial_len) if initial_len > 0 else "Auto"
-        super().__init__(label=initial_label, action_type="auto", style=style, row=row)
-        self.style = style
-        self.emoji = "\N{CLOCKWISE RIGHTWARDS AND LEFTWARDS OPEN CIRCLE ARROWS}"
-        self.label_name = "Auto {}"
-
-    async def callback(self, interaction: discord.Interaction):
-        user = interaction.user
-        if user not in self.view.auto:
-            await interaction.response.send_message(
-                box("You are not on the auto list. Try one of the other actions."), ephemeral=True)
-        else:
-            await interaction.response.defer()
-            view = ConfirmView(60, user)
-            stop_auto_text = (
-                "You are currently following the party in a daze, doing whatever they tell you to do. "
-                "Do you want to run away?"
-            )
-            msg = await interaction.followup.send(content=box(stop_auto_text), view=view, ephemeral=True, wait=True)
-            await view.wait()
-            await msg.edit(view=None)
-            if view.confirmed:
-                self.view.auto.remove(user)
-                await self.view.update()
-                await interaction.followup.send(
-                    box("{} regained control of their consciousness and ran away.").format(interaction.user.display_name))
+            await smart_embed(message="You are already fighting this monster.", ephemeral=True, interaction=interaction)
 
 
 class SpecialActionButton(discord.ui.Button):
     def __init__(
-            self,
-            style: discord.ButtonStyle,
-            row: Optional[int] = None,
+        self,
+        style: discord.ButtonStyle,
+        row: Optional[int] = None,
     ):
         super().__init__(label="Class Skill", style=style, row=row)
         self.style = style
@@ -247,7 +153,7 @@ class SpecialActionButton(discord.ui.Button):
         if "cooldown" not in c.heroclass:
             c.heroclass["cooldown"] = cooldown_time + 1
         if c.heroclass["cooldown"] <= time.time():
-            max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 20 else 20
+            max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 15 else 20
             roll = self.view.rng.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
             if self.view.insight[0] < roll:
                 self.view.insight = roll, c
@@ -255,7 +161,12 @@ class SpecialActionButton(discord.ui.Button):
             else:
                 good = False
                 msg = _("Another hero has already done a better job than you.")
-                await smart_embed(interaction=interaction, message=msg, ephemeral=True, cog=self.view.cog)
+                await smart_embed(
+                    message=msg,
+                    interaction=interaction,
+                    ephemeral=True,
+                    cog=self.view.cog,
+                )
             c.heroclass["ability"] = True
             c.heroclass["cooldown"] = time.time() + cooldown_time
 
@@ -268,9 +179,9 @@ class SpecialActionButton(discord.ui.Button):
                 await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
             if good:
                 session = self.view
+                was_exposed = not session.exposed
                 if roll <= 0.4:
-                    msg = _("You can't seem to focus on the fight ahead.")
-                    return await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
+                    return await smart_embed(interaction=interaction, message=_("You can't seem to focus on the fight ahead..."), cog=self.view.cog)
                 msg = ""
                 if session.no_monster:
                     if roll >= 0.4:
@@ -281,19 +192,6 @@ class SpecialActionButton(discord.ui.Button):
                     cdef = session.monster_modified_stats.get("cdef", 1.0)
                     hp = session.monster_modified_stats["hp"]
                     diplo = session.monster_modified_stats["dipl"]
-                    choice = self.view.rng.choice(["physical", "magic", "diplomacy"])
-                    if choice == "physical":
-                        physical_roll = 0.4
-                        magic_roll = 0.6
-                        diplo_roll = 0.8
-                    elif choice == "magic":
-                        physical_roll = 0.8
-                        magic_roll = 0.4
-                        diplo_roll = 0.6
-                    else:
-                        physical_roll = 0.8
-                        magic_roll = 0.6
-                        diplo_roll = 0.4
                     if roll == 1:
                         hp = session.monster_hp()
                         dipl = session.monster_dipl()
@@ -380,17 +278,22 @@ class SpecialActionButton(discord.ui.Button):
                             msg += _("This creature **can be reasoned** with!\n")
                         else:
                             msg += _("This monster can be **easily influenced!**\n")
+
                 if msg:
-                    if roll >= 0.4 and not session.no_monster:
+                    image = None
+                    if roll >= 0.4:
                         image = session.monster["image"]
-                        return await smart_embed(
-                            ctx=None,
-                            message=msg,
-                            success=True,
-                            image=image,
-                            cog=self.view.cog,
-                            interaction=interaction,
-                        )
+                    response_msg = await smart_embed(
+                        ctx=None,
+                        message=msg,
+                        success=True,
+                        image=image,
+                        cog=self.view.cog,
+                        interaction=interaction,
+                    )
+                    if session.exposed and not session.easy_mode:
+                        session.cog.dispatch_adventure(session, was_exposed=was_exposed)
+                    return response_msg
                 else:
                     return await smart_embed(
                         ctx=None,
@@ -399,8 +302,8 @@ class SpecialActionButton(discord.ui.Button):
                         cog=self.view.cog,
                         interaction=interaction,
                     )
-            else:
-                await self.send_cooldown(interaction, c, cooldown_time)
+        else:
+            await self.send_cooldown(interaction, c, cooldown_time)
 
     async def send_rage(self, interaction: discord.Interaction, c: Character):
         user = interaction.user
@@ -515,7 +418,9 @@ class SpecialActionButton(discord.ui.Button):
                 c = await Character.from_json(self.view.ctx, self.view.cog.config, user, self.view.cog._daily_bonus)
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
-                await interaction.response.send_message(_("There was an error loading your character."), ephemeral=True, interaction=interaction)
+                await smart_embed(
+                    message=_("There was an error loading your character."), ephemeral=True, interaction=interaction
+                )
                 return
             if not c.hc.has_action:
                 available_classes = humanize_list([c.class_name for c in HeroClasses if c.has_action], style="or")
@@ -536,6 +441,41 @@ class SpecialActionButton(discord.ui.Button):
                 await self.send_music(interaction, c)
             if c.hc is HeroClasses.ranger:
                 await self.send_ranger(interaction, c)
+
+
+class AutoButton(discord.ui.Button):
+    def __init__(
+            self,
+            style: discord.ButtonStyle,
+            row: Optional[int] = None,
+            initial_len=0
+    ):
+        initial_label = "Auto ({})".format(initial_len) if initial_len > 0 else "Auto"
+        super().__init__(label=initial_label, style=style, row=row)
+        self.style = style
+        self.emoji = "\N{CLOCKWISE RIGHTWARDS AND LEFTWARDS OPEN CIRCLE ARROWS}"
+        self.label_name = "Auto {}"
+
+    async def callback(self, interaction: discord.Interaction):
+        user = interaction.user
+        if user not in self.view.auto:
+            await interaction.response.send_message(
+                box("You are not on the auto list. Try one of the other actions."), ephemeral=True)
+        else:
+            await interaction.response.defer()
+            view = ConfirmView(60, user)
+            stop_auto_text = (
+                "You are currently following the party in a daze, doing whatever they tell you to do. "
+                "Do you want to run away?"
+            )
+            msg = await interaction.followup.send(content=box(stop_auto_text), view=view, ephemeral=True, wait=True)
+            await view.wait()
+            await msg.edit(view=None)
+            if view.confirmed:
+                self.view.auto.remove(user)
+                await self.view.update()
+                await interaction.followup.send(
+                    box("{} regained control of their consciousness and ran away.").format(interaction.user.display_name))
 
 
 class ActionListButton(discord.ui.Button):
@@ -616,6 +556,7 @@ class GameSession(discord.ui.View):
     exposed: bool = False
     finished: bool = False
     rng: Random
+    _last_update: Dict[Action, int]
 
     def __init__(self, **kwargs):
         self.ctx: Context = kwargs.pop("ctx")
@@ -624,6 +565,7 @@ class GameSession(discord.ui.View):
         self.attribute: dict = kwargs.pop("attribute")
         self.attribute_stats: Tuple[float, ...] = kwargs.pop("attribute_stats", (1.0, 1.0))
         self.guild: discord.Guild = kwargs.pop("guild")
+        self.channel: discord.TextChannel = kwargs.pop("channel")
         self.boss: bool = kwargs.pop("boss")
         self.miniboss: dict = kwargs.pop("miniboss")
         self.timer: int = kwargs.pop("timer")
@@ -646,13 +588,16 @@ class GameSession(discord.ui.View):
         self.start_time = datetime.now()
         self.easy_mode = kwargs.get("easy_mode", False)
         self.no_monster = kwargs.get("no_monster", False)
+        self.possessed = self.attribute == " possessed"
+        self.immortal = self.attribute == "n immortal"
+        self.ascended = "Ascended" in self.challenge
         self.rng = kwargs["rng"]
         super().__init__(timeout=self.timer)
-        self.attack_button = AttackButton(discord.ButtonStyle.grey)
-        self.talk_button = TalkButton(discord.ButtonStyle.grey)
-        self.magic_button = MagicButton(discord.ButtonStyle.grey)
-        self.talk_button = TalkButton(discord.ButtonStyle.grey)
-        self.pray_button = PrayButton(discord.ButtonStyle.grey)
+        self.attack_button = ActionButton(Action.fight)
+        self.talk_button = ActionButton(Action.talk)
+        self.magic_button = ActionButton(Action.magic)
+        self.pray_button = ActionButton(Action.pray)
+        self.run_button = ActionButton(Action.run)
         self.auto_button = AutoButton(style=discord.ButtonStyle.grey, initial_len=len(self.auto))
         self.special_button = SpecialActionButton(discord.ButtonStyle.blurple)
         self.action_list_button = ActionListButton(discord.ButtonStyle.blurple)
@@ -663,6 +608,7 @@ class GameSession(discord.ui.View):
         self.add_item(self.auto_button)
         self.add_item(self.special_button)
         self.add_item(self.action_list_button)
+        self._last_update: Dict[Action, int] = {a: 0 for a in Action}
 
     def monster_hp(self) -> int:
         return max(int(self.monster_modified_stats.get("hp", 0) * self.attribute_stats[0] * self.monster_stats), 1)
@@ -671,11 +617,21 @@ class GameSession(discord.ui.View):
         return max(int(self.monster_modified_stats.get("dipl", 0) * self.attribute_stats[1] * self.monster_stats), 1)
 
     async def update(self):
-        self.attack_button.label = self.attack_button.label_name.format(f"({len(self.fight)})")
-        self.talk_button.label = self.talk_button.label_name.format(f"({len(self.talk)})")
-        self.magic_button.label = self.magic_button.label_name.format(f"({len(self.magic)})")
-        self.pray_button.label = self.pray_button.label_name.format(f"({len(self.pray)})")
-        self.auto_button.label = self.auto_button.label_name.format(f"({len(self.auto)})")
+        buttons = {
+            Action.fight: self.attack_button,
+            Action.magic: self.magic_button,
+            Action.talk: self.talk_button,
+            Action.pray: self.pray_button,
+            Action.auto: self.auto_button,
+        }
+        for action in Action:
+            if len(getattr(self, action.name, [])) != self._last_update[action]:
+                new_number = len(getattr(self, action.name, []))
+                self._last_update[action] = new_number
+                if new_number != 0:
+                    buttons[action].label = buttons[action].action.name.title() + f" ({new_number})"
+                else:
+                    buttons[action].label = buttons[action].action.name.title()
         await self.message.edit(view=self)
 
     def in_adventure(self, user: discord.Member) -> bool:
@@ -695,6 +651,11 @@ class GameSession(discord.ui.View):
         if self.easy_mode:
             return self.challenge
         return _("Unknown creature")
+
+    async def send(self, *args, **kwargs):
+        # This is here so that you can still use the session to send a new message
+        # when it is dispatched through the bot.
+        await self.ctx.send(args, **kwargs)
 
     async def interaction_check(self, interaction: discord.Interaction):
         """Just extends the default reaction_check to use owner_ids"""

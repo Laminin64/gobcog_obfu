@@ -632,7 +632,7 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 else:
-                    cooldown_time = c.heroclass["cooldown"]
+                    cooldown_time = int(c.heroclass["cooldown"])
                     return await smart_embed(
                         ctx,
                         _(
@@ -676,14 +676,12 @@ class ClassAbilities(AdventureMixin):
                     ctx,
                     _("{user}, ability already in use.").format(user=bold(ctx.author.display_name)),
                 )
-            cooldown_time = max(300, (900 - max((c.luck + c.total_int) * 2, 0)))
+            cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
             if c.heroclass["cooldown"] <= time.time():
-                max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 20 else 20
+                max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 15 else 20
                 roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
-                if roll < 0:
-                    roll = 0
                 if ctx.guild.id in self._sessions and self._sessions[ctx.guild.id].insight[0] < roll:
                     self._sessions[ctx.guild.id].insight = roll, c
                     good = True
@@ -702,10 +700,12 @@ class ClassAbilities(AdventureMixin):
                                 skill=self.emojis.skills.psychic,
                             ),
                         )
+                session = self._sessions[ctx.guild.id]
+                was_exposed = not session.exposed
                 if good:
-                    session = self._sessions[ctx.guild.id]
+
                     if roll <= 0.4:
-                        return await smart_embed(ctx, _("You can't seem to focus on the fight ahead."))
+                        return await smart_embed(ctx, _("You suck."))
                     msg = ""
                     if session.no_monster:
                         if roll >= 0.4:
@@ -729,6 +729,7 @@ class ClassAbilities(AdventureMixin):
                             physical_roll = 0.8
                             magic_roll = 0.6
                             diplo_roll = 0.4
+
                         if roll == 1:
                             hp = session.monster_hp()
                             dipl = session.monster_dipl()
@@ -760,7 +761,7 @@ class ClassAbilities(AdventureMixin):
                                 dipl=humanize_number(int(dipl)),
                             )
                             self._sessions[ctx.guild.id].exposed = True
-                        elif roll >= 0.80:
+                        elif roll >= 0.90:
                             hp = session.monster_hp()
                             msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
                                 challenge=session.challenge,
@@ -816,10 +817,15 @@ class ClassAbilities(AdventureMixin):
                                 msg += _("This creature **can be reasoned** with!\n")
                             else:
                                 msg += _("This monster can be **easily influenced!**\n")
+
                     if msg:
+                        image = None
                         if roll >= 0.4 and not session.no_monster:
                             image = session.monster["image"]
-                            return await smart_embed(ctx, msg, image=image)
+                        response_msg = await smart_embed(ctx, msg, image=image)
+                        if session.exposed and not session.easy_mode:
+                            self.dispatch_adventure(session, was_exposed=was_exposed)
+                        return response_msg
                     else:
                         return await smart_embed(ctx, _("You have failed to discover anything about this monster."))
             else:
@@ -872,7 +878,7 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 else:
-                    cooldown_time = c.heroclass["cooldown"]
+                    cooldown_time = int(c.heroclass["cooldown"])
                     return await smart_embed(
                         ctx,
                         _(
@@ -922,7 +928,7 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 else:
-                    cooldown_time = c.heroclass["cooldown"]
+                    cooldown_time = int(c.heroclass["cooldown"])
                     return await smart_embed(
                         ctx,
                         _(
@@ -969,7 +975,7 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 else:
-                    cooldown_time = c.heroclass["cooldown"]
+                    cooldown_time = int(c.heroclass["cooldown"])
                     return await smart_embed(
                         ctx,
                         _(

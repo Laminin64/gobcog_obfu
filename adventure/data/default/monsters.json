@@ -20,7 +20,7 @@
     "Bear": {"hp": 90, "pdef": 1.25, "mdef": 0.85, "dipl": 80, "image": "https://cdn.pixabay.com/photo/2016/03/27/18/10/bear-1283347_960_720.jpg", "boss": false, "miniboss": {}, "color":""},
     "Black Wyrm": {"hp": 255, "pdef": 0.8, "mdef": 1, "dipl": 255, "image": "https://kagesatsuki.files.wordpress.com/2017/05/170531_02.jpg", "boss": true, "miniboss": {}, "color":""},
     "Blood Wyrm": {"hp": 310, "pdef": 0.9, "mdef": 0.85, "dipl": 320, "image": "https://cdn.pixabay.com/photo/2017/08/20/16/43/dragon-2662375_960_720.jpg", "boss": true, "miniboss": {}, "color":""},
-    "Bloodrage Drake": {"hp": 340, "pdef": 1, "mdef": 1, "dipl": 325, "image": "https://i.imgur.com/dxEjIsT.jpg", "boss": true, "miniboss": {}, "color":""},
+    "Bloodrage Drake": {"hp": 340, "pdef": 1, "mdef": 1, "dipl": 325, "image": "https://i.imgur.com/mOq2VN2.png", "boss": true, "miniboss": {}, "color":""},
     "Bloodtooth Wolf": {"hp": 50, "pdef": 1.1, "mdef": 0.8, "dipl": 38, "image": "https://cdn.pixabay.com/photo/2015/02/13/11/57/wolf-635063_960_720.jpg", "boss": false, "miniboss": {}, "color":""},
     "Bog Beast": {"hp": 115, "pdef": 1, "mdef": 1, "dipl": 135, "image": "https://www.goodfreephotos.com/cache/art-and-illustrations/hand-coming-up-from-the-swamp_800.jpg", "boss": false, "miniboss": {}, "color":""},
     "Bronze Dragon": {"hp": 260, "pdef": 1.5, "mdef": 1, "dipl": 250, "image": "https://cdn.pixabay.com/photo/2017/01/13/07/57/dragon-1976596_960_720.jpg", "boss": true, "miniboss": {}, "color":""},
