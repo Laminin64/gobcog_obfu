@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import logging
-import random
 import time
 from datetime import datetime
-from math import ceil
 from typing import List, Mapping, MutableMapping, Optional, Set, Tuple
 
 import discord
@@ -16,6 +14,7 @@ from .abc import AdventureMixin
 from .charsheet import Character, has_funds
 from .constants import HeroClasses
 from .helpers import escape, smart_embed, ConfirmView
+from .rng import Random
 
 # This is split into its own file for future buttons usage
 # We will have game sessions inherit discord.ui.View and then we can send a message
@@ -50,7 +49,7 @@ class BaseActionButton(discord.ui.Button):
         if c.hc is HeroClasses.ranger:
             pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
 
-        choice = random.choice(choices[heroclass] + choices["hero"])
+        choice = self.view.rng.choice(choices[heroclass] + choices["hero"])
         choice = choice.replace("$pet", pet)
         choice = choice.replace("$monster", self.view.challenge_name())
         weapon = c.get_weapons()
@@ -249,7 +248,7 @@ class SpecialActionButton(discord.ui.Button):
             c.heroclass["cooldown"] = cooldown_time + 1
         if c.heroclass["cooldown"] <= time.time():
             max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 20 else 20
-            roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
+            roll = self.view.rng.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
             if self.view.insight[0] < roll:
                 self.view.insight = roll, c
                 good = True
@@ -282,7 +281,7 @@ class SpecialActionButton(discord.ui.Button):
                     cdef = session.monster_modified_stats.get("cdef", 1.0)
                     hp = session.monster_modified_stats["hp"]
                     diplo = session.monster_modified_stats["dipl"]
-                    choice = random.choice(["physical", "magic", "diplomacy"])
+                    choice = self.view.rng.choice(["physical", "magic", "diplomacy"])
                     if choice == "physical":
                         physical_roll = 0.4
                         magic_roll = 0.6
@@ -296,43 +295,43 @@ class SpecialActionButton(discord.ui.Button):
                         magic_roll = 0.6
                         diplo_roll = 0.4
                     if roll == 1:
-                        hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0])
-                        dipl = int(diplo * self.view.cog.ATTRIBS[session.attribute][1])
+                        hp = session.monster_hp()
+                        dipl = session.monster_dipl()
                         msg += _(
                             "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}){trans}.\n"
                         ).format(
                             challenge=session.challenge,
                             attr=session.attribute,
                             hp_symbol=self.view.cog.emojis.hp,
-                            hp=humanize_number(ceil(hp)),
+                            hp=humanize_number(hp),
                             dipl_symbol=self.view.cog.emojis.dipl,
-                            dipl=humanize_number(ceil(dipl)),
+                            dipl=humanize_number(dipl),
                             trans=f" (**Transcended**) {self.view.cog.emojis.skills.psychic}"
                             if session.transcended
                             else f"{self.view.cog.emojis.skills.psychic}",
                         )
                         self.view.exposed = True
                     elif roll >= 0.95:
-                        hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0])
-                        dipl = int(diplo * self.view.cog.ATTRIBS[session.attribute][1])
+                        hp = session.monster_hp()
+                        dipl = session.monster_dipl()
                         msg += _(
                             "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}).\n"
                         ).format(
                             challenge=session.challenge,
                             attr=session.attribute,
                             hp_symbol=self.view.cog.emojis.hp,
-                            hp=humanize_number(ceil(hp)),
+                            hp=humanize_number(hp),
                             dipl_symbol=self.view.cog.emojis.dipl,
-                            dipl=humanize_number(ceil(dipl)),
+                            dipl=humanize_number(dipl),
                         )
                         self.view.exposed = True
                     elif roll >= 0.90:
-                        hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0])
+                        hp = session.monster_hp()
                         msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
                             challenge=session.challenge,
                             attr=session.attribute,
                             hp_symbol=self.view.cog.emojis.hp,
-                            hp=humanize_number(ceil(hp)),
+                            hp=humanize_number(hp),
                         )
                         self.view.exposed = True
                     elif roll > 0.75:
@@ -616,18 +615,21 @@ class GameSession(discord.ui.View):
     no_monster: bool = False
     exposed: bool = False
     finished: bool = False
+    rng: Random
 
     def __init__(self, **kwargs):
         self.ctx: Context = kwargs.pop("ctx")
         self.cog: AdventureMixin = kwargs.pop("cog")
         self.challenge: str = kwargs.pop("challenge")
         self.attribute: dict = kwargs.pop("attribute")
+        self.attribute_stats: Tuple[float, ...] = kwargs.pop("attribute_stats", (1.0, 1.0))
         self.guild: discord.Guild = kwargs.pop("guild")
         self.boss: bool = kwargs.pop("boss")
         self.miniboss: dict = kwargs.pop("miniboss")
         self.timer: int = kwargs.pop("timer")
         self.monster: dict = kwargs.pop("monster")
         self.monsters: Mapping[str, Mapping] = kwargs.pop("monsters", [])
+        self.monster_stats: int = kwargs.pop("monster_stats", 1)
         self.monster_modified_stats = kwargs.pop("monster_modified_stats", self.monster)
         self.message = kwargs.pop("message", 1)
         self.message_id: int = 0
@@ -644,6 +646,7 @@ class GameSession(discord.ui.View):
         self.start_time = datetime.now()
         self.easy_mode = kwargs.get("easy_mode", False)
         self.no_monster = kwargs.get("no_monster", False)
+        self.rng = kwargs["rng"]
         super().__init__(timeout=self.timer)
         self.attack_button = AttackButton(discord.ButtonStyle.grey)
         self.talk_button = TalkButton(discord.ButtonStyle.grey)
@@ -660,6 +663,12 @@ class GameSession(discord.ui.View):
         self.add_item(self.auto_button)
         self.add_item(self.special_button)
         self.add_item(self.action_list_button)
+
+    def monster_hp(self) -> int:
+        return max(int(self.monster_modified_stats.get("hp", 0) * self.attribute_stats[0] * self.monster_stats), 1)
+
+    def monster_dipl(self) -> int:
+        return max(int(self.monster_modified_stats.get("dipl", 0) * self.attribute_stats[1] * self.monster_stats), 1)
 
     async def update(self):
         self.attack_button.label = self.attack_button.label_name.format(f"({len(self.fight)})")

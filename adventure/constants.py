@@ -6,7 +6,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import humanize_list
+from redbot.core.utils.chat_formatting import humanize_list, pagify
 
 if TYPE_CHECKING:
     from .charsheet import Character, Item
@@ -104,6 +104,26 @@ class Slot(Enum):
             Slot.charm: _("Charm"),
         }
 
+    @staticmethod
+    def short_names() -> Dict[Slot, str]:
+        return {
+            Slot.head: _("H"),
+            Slot.neck: _("N"),
+            Slot.chest: _("C"),
+            Slot.gloves: _("G"),
+            Slot.belt: _("B"),
+            Slot.legs: _("L"),
+            Slot.boots: _("F"),
+            Slot.left: _("LH"),
+            Slot.right: _("RH"),
+            Slot.two_handed: _("2H"),
+            Slot.ring: _("R"),
+            Slot.charm: _("CH"),
+        }
+
+    def get_short_name(self) -> Optional[str]:
+        return self.short_names().get(self)
+
     def get_name(self) -> Optional[str]:
         return self.names().get(self)
 
@@ -143,6 +163,20 @@ class Rarities(Enum):
         )
 
     @staticmethod
+    def emojis():
+        return {
+            Rarities.normal: "\N{WHITE LARGE SQUARE}",
+            Rarities.rare: "\N{LARGE GREEN SQUARE}",
+            Rarities.epic: "\N{LARGE BLUE SQUARE}",
+            Rarities.legendary: "\N{LARGE YELLOW SQUARE}",
+            Rarities.ascended: "\N{UP-POINTING SMALL RED TRIANGLE}",
+            Rarities.set: "\N{LARGE RED SQUARE}",
+            Rarities.forged: "\N{HAMMER AND PICK}\N{VARIATION SELECTOR-16}",
+            Rarities.event: "\N{PARTY POPPER}",
+            Rarities.pet: "\N{CAT FACE}",
+        }
+
+    @staticmethod
     def names():
         return {
             Rarities.normal: _("Normal"),
@@ -179,8 +213,13 @@ class Rarities(Enum):
     def ansi(self) -> str:
         return f"{ANSI_ESCAPE}[{self.rarity_colour.value}m{self.get_name()}{ANSI_CLOSE}"
 
-    def as_ansi(self, name: str) -> str:
-        return f"{ANSI_ESCAPE}[{self.rarity_colour.value}m{self.as_str(name)}{ANSI_CLOSE}"
+    def as_ansi(self, name: str, maxwidth: Optional[int] = None) -> str:
+        if maxwidth is None:
+            return f"{ANSI_ESCAPE}[{self.rarity_colour.value}m{self.as_str(name)}{ANSI_CLOSE}"
+        ret = []
+        for page in pagify(self.as_str(name), delims=[" "], page_length=maxwidth):
+            ret.append(f"{ANSI_ESCAPE}[{self.rarity_colour.value}m{page}{ANSI_CLOSE}")
+        return "\n".join(i for i in ret)
 
     @staticmethod
     def open_strings() -> Dict[Rarities, str]:
@@ -238,6 +277,10 @@ class Rarities(Enum):
             "ascended": 4,
             "set": 5,
         }[self.name]
+
+    @property
+    def emoji(self):
+        return self.emojis().get(self)
 
     @property
     def rarity_colour(self) -> ANSITextColours:
@@ -439,6 +482,15 @@ class Skills(Enum):
     reset = "reset"
 
 
+class ANSIBackgroundTextColours:
+    def __init__(self, text_colour: ANSITextColours, background_colour: ANSIBackgroundColours):
+        self.text_colour = text_colour
+        self.background_colour = background_colour
+
+    def as_str(self, value: str) -> str:
+        return f"{ANSI_ESCAPE}[{self.text_colour.value};{self.background_colour.value}m{value}{ANSI_CLOSE}"
+
+
 class ANSITextColours(Enum):
     normal = 37
     gray = 30
@@ -471,19 +523,8 @@ class ANSIBackgroundColours(Enum):
     def __str__(self):
         return str(self.value)
 
-
-class Slots(Enum):
-    head = "head"
-    neck = "neck"
-    chest = "chest"
-    gloves = "gloves"
-    belt = "belt"
-    legs = "legs"
-    boots = "boots"
-    left = "left"
-    right = "right"
-    two_handed = "two handed"
-    ring = "ring"
+    def as_str(self, value: str) -> str:
+        return f"{ANSI_ESCAPE}[{self.value}m{value}{ANSI_CLOSE}"
     charm = "charm"
 
 

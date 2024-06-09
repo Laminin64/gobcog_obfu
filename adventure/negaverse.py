@@ -212,7 +212,7 @@ class Negaverse(AdventureMixin):
                     offering_value += curr_balance
                     loss_string = _("all of their")
                 loss_state = True
-                max_items_lost = max(min(10, int(len(character.backpack) * 0.10)), 0)
+                max_items_lost = max(min(10, int(len(character.backpack) * 0.10)), 1)
                 items_to_lose = random.randint(0, max_items_lost)
                 # crit fails lose between 0 and 10 items based on their total backpack size
                 if character.bal < loss:
