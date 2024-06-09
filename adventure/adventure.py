@@ -1233,8 +1233,8 @@ class Adventure(
                 if session.transcended:
                     if session.boss and not session.no_monster:
                         available_loot = [
-                            Treasure(epic=1, legendary=5, ascended=2, _set=1),
-                            Treasure(ascended=1, _set=1),
+                            Treasure(epic=1, legendary=5, ascended=2, _set=2),
+                            Treasure(ascended=1, _set=2),
                         ]
                     else:
                         available_loot = [
@@ -1247,18 +1247,18 @@ class Adventure(
                 elif session.boss:  # rewards 60:30:10 Epic Legendary Gear Set items
                     # available_loot = [[0, 0, 3, 1, 0, 0], [0, 0, 1, 2, 1, 0], [0, 0, 0, 3, 2, 0]]
                     available_loot = [
-                        Treasure(epic=3, legendary=1),
-                        Treasure(epic=1, legendary=2, ascended=1),
-                        Treasure(legendary=3, ascended=2),
+                        Treasure(epic=3, legendary=1, _set=1),
+                        Treasure(epic=1, legendary=2, ascended=1, _set=1),
+                        Treasure(legendary=3, ascended=2, _set=1),
                     ]
                     treasure = session.rng.choice(available_loot)
                 elif session.miniboss:  # rewards 50:50 rare:normal chest for killing something like the basilisk
                     # available_loot = [[1, 1, 1, 0, 0, 0], [0, 0, 1, 1, 1, 0], [0, 0, 2, 2, 0, 0], [0, 1, 0, 2, 1, 0]]
                     available_loot = [
-                        Treasure(normal=1, rare=1, epic=1),
-                        Treasure(epic=1, legendary=1, ascended=1),
-                        Treasure(epic=2, legendary=2),
-                        Treasure(rare=1, legendary=2, ascended=1),
+                        #Treasure(normal=1, rare=1, epic=1),
+                        Treasure(epic=1, legendary=1, ascended=1, _set=1),
+                        Treasure(epic=2, legendary=2, _set=1),
+                        Treasure(rare=1, legendary=2, ascended=1, _set=1),
                     ]
                     treasure = session.rng.choice(available_loot)
                 elif monster_amount >= 700:  # super hard stuff
@@ -1314,8 +1314,8 @@ class Adventure(
                     if session.boss and not session.no_monster:
                         # available_loot = [[0, 0, 1, 5, 4, 2], [0, 0, 3, 4, 5, 2],]
                         available_loot = [
-                            Treasure(epic=1, legendary=5, ascended=4, _set=2),
-                            Treasure(epic=3, legendary=4, ascended=5, _set=2),
+                            Treasure(epic=1, legendary=5, ascended=4, _set=3),
+                            Treasure(epic=3, legendary=4, ascended=5, _set=3),
                         ]
                     else:
                         # available_loot = [[0, 0, 1, 4, 2, 1], [0, 0, 1, 1, 2, 1],]
@@ -1327,15 +1327,15 @@ class Adventure(
                 elif session.boss:  # rewards 60:30:10 Epic Legendary Gear Set items
                     # available_loot = [[0, 0, 1, 2, 1, 0], [0, 0, 0, 3, 2, 0]]
                     available_loot = [
-                        Treasure(epic=1, legendary=2, ascended=1),
-                        Treasure(legendary=3, ascended=2),
+                        Treasure(epic=1, legendary=2, ascended=1, _set=1),
+                        Treasure(legendary=3, ascended=2, _set=1),
                     ]
                     treasure = session.rng.choice(available_loot)
                 elif session.miniboss:  # rewards 50:50 rare:normal chest for killing something like the basilisk
                     # treasure = random.choice([[0, 0, 2, 2, 3, 0], [0, 1, 0, 2, 2, 0]])
                     available_loot = [
-                        Treasure(epic=2, legendary=2, ascended=3),
-                        Treasure(rare=1, legendary=2, ascended=2),
+                        Treasure(epic=2, legendary=2, ascended=3, _set=1),
+                        Treasure(rare=1, legendary=2, ascended=2, _set=1),
                     ]
                     treasure = session.rng.choice(available_loot)
                 elif monster_amount >= 700:  # super hard stuff
