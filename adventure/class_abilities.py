@@ -59,7 +59,7 @@ class ClassAbilities(AdventureMixin):
                     "So you feel like taking on a class, {author}?\n"
                     "Available classes are: {classes}\n"
                     "Use `{prefix}heroclass name-of-class` to choose one."
-                ).format(author=bold(ctx.author.display_name), classes=classes, prefix=ctx.prefix),
+                ).format(author=bold(ctx.author.display_name), classes=classes, prefix=ctx.clean_prefix),
             )
 
         else:
@@ -283,7 +283,7 @@ class ClassAbilities(AdventureMixin):
                     return await ctx.send(
                         box(
                             _("{author}, you already have a pet. Try foraging ({prefix}pet forage).").format(
-                                author=escape(ctx.author.display_name), prefix=ctx.prefix
+                                author=escape(ctx.author.display_name), prefix=ctx.clean_prefix
                             ),
                             lang="ansi",
                         )
@@ -1185,7 +1185,7 @@ class ClassAbilities(AdventureMixin):
                             ),
                             lang="ansi",
                         )
-                        await view.message.edit(content=created_item, view=None)
+                        await view.message.edit(content=forged_item, view=None)
                     else:
                         c.heroclass["cooldown"] = time.time() + cooldown_time
                         await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))

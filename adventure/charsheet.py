@@ -1844,8 +1844,10 @@ class Character:
             if item and item.to_json() not in list(self.pieces_to_keep.values()):
                 await self.add_to_backpack(item)
         if (self.left and self.left.slot is Slot.two_handed) or (self.right and self.right.slot is Slot.two_handed):
-            if self.left.to_json() not in list(self.pieces_to_keep.values()):
+            if self.left and self.left.to_json() not in list(self.pieces_to_keep.values()):
                 await self.add_to_backpack(self.left)
+            elif self.right and self.right.to_json() not in list(self.pieces_to_keep.values()):
+                await self.add_to_backpack(self.right)
         else:
             for item in [self.left, self.right]:
                 if item and item.to_json() not in list(self.pieces_to_keep.values()):
@@ -1933,9 +1935,10 @@ class Character:
             items_to_keep[slots] = item.to_json() if self.rebirths >= 30 and item and item.set else {}
             if item and item.set and self.rebirths >= 30:
                 items_to_keep[slots.name] = item.to_json()
-        if self.left == self.right and self.right is not None:
+        if self.left == self.right and self.right is not None and self.left is not None:
             if self.right.set and self.rebirths >= 30:
                 items_to_keep["right"] = self.right.to_json()
+                items_to_keep["left"] = self.left.to_json()
         else:
             if self.left and self.left.set and self.rebirths >= 30:
                 items_to_keep["left"] = self.left.to_json()

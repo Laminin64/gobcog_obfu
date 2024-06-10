@@ -625,6 +625,7 @@ class GameSession(discord.ui.View):
             Action.auto: self.auto_button,
         }
         for action in Action:
+            self.auto_button.label = self.auto_button.label_name.format(f"({len(self.auto)})")
             if len(getattr(self, action.name, [])) != self._last_update[action]:
                 new_number = len(getattr(self, action.name, []))
                 self._last_update[action] = new_number

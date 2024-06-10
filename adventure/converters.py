@@ -850,10 +850,12 @@ class BackpackFilterParser(commands.Converter):
         else:
             command = ""
         response = {}
-        set_names = set(SET_BONUSES.keys())
+        set_names = set(ctx.cog.SET_BONUSES.keys())
         parser = NoExitParser(description="Backpack Filter Parsing.", add_help=False)
         parser.add_argument("--str", dest="strength", nargs="+")
         parser.add_argument("--strength", dest="strength", nargs="+")
+        parser.add_argument("--att", dest="strength", nargs="+")
+        parser.add_argument("--attack", dest="strength", nargs="+")
 
         parser.add_argument("--intelligence", dest="intelligence", nargs="+")
         parser.add_argument("--int", dest="intelligence", nargs="+")
