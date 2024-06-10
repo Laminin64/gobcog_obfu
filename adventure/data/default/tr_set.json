@@ -152,9 +152,9 @@
     "Basileus Guard": {"slot": ["left"], "set": "High Emperor","parts": 10, "att": 0, "cha": 30, "int": 0, "dex": 10, "luck": 0, "setlevel": 49, "rarity": "set"},
     "Basileus Love": {"slot": ["charm"], "set": "High Emperor", "parts": 10, "att": 0, "cha": 30, "int": 0, "dex": 10, "luck": 0, "setlevel": 49, "rarity": "set"},
 
+    "Staff Of Blinding Light": {"slot": ["right", "left"], "set": "Blind Mage", "parts": 5, "att": -5, "cha": 5, "int": 15, "dex": 0, "luck": 3, "setlevel": 79, "rarity": "set"},
     "Mage Blindfold": {"slot": ["head"], "set": "Blind Mage", "parts": 5, "att": -5, "cha": 5, "int": 10, "dex": 0, "luck": 3, "setlevel": 79, "rarity": "set"},
     "Mage Tunic": {"slot": ["chest"], "set": "Blind Mage", "parts": 5, "att": -5, "cha": 5, "int": 10, "dex": 0, "luck": 3, "setlevel": 79, "rarity": "set"},
     "Mage Pants": {"slot": ["legs"], "set": "Blind Mage", "parts": 5, "att": -5, "cha": 5, "int": 10, "dex": 0, "luck": 3, "setlevel": 79, "rarity": "set"},
-    "Mage Sandals": {"slot": ["boots"], "set": "Blind Mage", "parts": 5, "att": -5, "cha": 5, "int": 10, "dex": 0, "luck": 3, "setlevel": 79, "rarity": "set"},
-    "Staff of Blinding Light": {"slot": ["left", "right"], "set": "Blind Mage", "parts": 5, "att": -10, "cha": 5, "int": 10, "dex": 0, "luck": 3, "setlevel": 79, "rarity": "set"}
+    "Mage Sandals": {"slot": ["boots"], "set": "Blind Mage", "parts": 5, "att": -5, "cha": 5, "int": 10, "dex": 0, "luck": 3, "setlevel": 79, "rarity": "set"}
 }
