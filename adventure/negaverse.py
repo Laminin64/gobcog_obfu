@@ -212,7 +212,7 @@ class Negaverse(AdventureMixin):
                     offering_value += curr_balance
                     loss_string = _("all of their")
                 loss_state = True
-                max_items_lost = max(min(10, int(len(character.backpack) * 0.10)), 1)
+                max_items_lost = max(min(5, int(len(character.backpack) * 0.05)), 1)
                 items_to_lose = random.randint(0, max_items_lost)
                 # crit fails lose between 0 and 10 items based on their total backpack size
                 if character.bal < loss:
@@ -313,7 +313,7 @@ class Negaverse(AdventureMixin):
                     view=None,
                 )
             else:
-                loss = round(bal / (random.randint(10, 25)))
+                loss = round(bal / (random.randint(10, 20)))
                 curr_balance = character.bal
                 try:
                     await bank.withdraw_credits(ctx.author, loss)
@@ -328,10 +328,13 @@ class Negaverse(AdventureMixin):
                 # regular fails lose rarities depending on the difference of the roll
                 # i.e. A near loss should only lose normal quality items but severely losing
                 # will lose up to ascended if the versus rolled max and you rolled just above crit miss
-                max_items_lost = max(min(10, int(len(character.backpack) * 0.10)), 0)
+                max_items_lost = max(min(5, int(len(character.backpack) * 0.05)), 1)
                 # max items to lose based on 10% of the players total items in their backpack
                 # users with fewer items should lose less but hoarders lose more up to a max of 10
-                items_to_lose = random.randint(0, max_items_lost)
+                if random.randint(0, 100) <= 10:
+                    items_to_lose = random.randint(0, max_items_lost)
+                else:
+                    items_to_lose = 0
                 if character.bal < loss:
                     items_to_lose += 1
                 items = await character.looted(how_many=items_to_lose, exclude=exclude_list)

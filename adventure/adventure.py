@@ -1320,16 +1320,18 @@ class Adventure(
                 elif monster_amount >= 300:  # rewards 50:50 rare:normal chest for killing hardish stuff
                     # available_loot = [[1, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0]]
                     available_loot = [
-                        Treasure(normal=1),
+                        Treasure(epic=1),
                         Treasure(rare=1),
-                        Treasure(normal=1, rare=1),
+                        Treasure(rare=1, epic=1),
                     ]
                     if roll <= 2:
                         treasure = session.rng.choice(available_loot)
                 elif monster_amount >= 80:  # small chance of a normal chest on killing stuff that's not terribly weak
                     if roll == 1:
                         # treasure = [1, 0, 0, 0, 0, 0]
-                        treasure = Treasure(normal=1)
+                        Treasure(normal=1),
+                        Treasure(rare=1),
+                        Treasure(normal=1, rare=1),
 
                 if session.boss:  # always rewards at least an epic chest.
                     # roll for legendary chest
@@ -1398,12 +1400,14 @@ class Adventure(
                     available_loot = [
                         Treasure(rare=2),
                         Treasure(normal=1, rare=2, epic=1),
+                        Treasure(rare=1, epic=2, legendary=1),
                     ]
                     if roll <= 2:
                         treasure = session.rng.choice(available_loot)
                 elif monster_amount >= 80:  # small chance of a normal chest on killing stuff that's not terribly weak
                     if roll == 1:
-                        treasure = Treasure(normal=3)
+                        Treasure(rare=2),
+                        Treasure(normal=1, rare=2, epic=1),
                         # treasure = [3, 0, 0, 0, 0, 0]
 
                 if session.boss:  # always rewards at least an epic chest.
