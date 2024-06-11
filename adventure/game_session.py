@@ -598,13 +598,14 @@ class GameSession(discord.ui.View):
         self.magic_button = ActionButton(Action.magic)
         self.pray_button = ActionButton(Action.pray)
         self.run_button = ActionButton(Action.run)
-        self.auto_button = AutoButton(style=discord.ButtonStyle.grey, initial_len=len(self.auto))
+        self.auto_button = AutoButton(style=discord.ButtonStyle.blurple, initial_len=len(self.auto))
         self.special_button = SpecialActionButton(discord.ButtonStyle.blurple)
         self.action_list_button = ActionListButton(discord.ButtonStyle.blurple)
         self.add_item(self.attack_button)
         self.add_item(self.magic_button)
         self.add_item(self.talk_button)
         self.add_item(self.pray_button)
+        self.add_item(self.run_button)
         self.add_item(self.auto_button)
         self.add_item(self.special_button)
         self.add_item(self.action_list_button)
@@ -622,11 +623,15 @@ class GameSession(discord.ui.View):
             Action.magic: self.magic_button,
             Action.talk: self.talk_button,
             Action.pray: self.pray_button,
+            Action.run: self.run_button,
             Action.auto: self.auto_button,
         }
         for action in Action:
             if len(getattr(self, action.name, [])) != self._last_update[action]:
-                self.auto_button.label = self.auto_button.label_name.format(f"({len(self.auto)})")
+                if len(self.auto) > 0:
+                    self.auto_button.label = self.auto_button.label_name.format(f"({len(self.auto)})")
+                else:
+                    self.auto_button.label = "Auto"
                 new_number = len(getattr(self, action.name, []))
                 self._last_update[action] = new_number
                 if new_number != 0:
@@ -643,6 +648,7 @@ class GameSession(discord.ui.View):
                 *self.magic,
                 *self.pray,
                 *self.talk,
+                *self.run,
                 *self.auto,
             ]
         )
