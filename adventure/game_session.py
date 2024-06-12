@@ -81,12 +81,6 @@ class ActionButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
         user = interaction.user
-        if user in self.view.auto:
-            new_auto = len(self.view.auto) - 1
-            if new_auto > 0:
-                self.view.auto_button.label = self.view.auto_button.label_name.format(f"({new_auto})")
-            else:
-                self.view.auto_button.label = "Auto"
         for action in Action:
             if action is self.action:
                 continue
@@ -96,6 +90,8 @@ class ActionButton(discord.ui.Button):
             getattr(self.view, self.action.name).append(user)
             await self.send_response(interaction)
             await self.view.update()
+            if user in self.view.auto:
+                await self.view.update()
         else:
             await smart_embed(message="You are already fighting this monster.", ephemeral=True, interaction=interaction)
 
@@ -634,6 +630,10 @@ class GameSession(discord.ui.View):
         }
         for action in Action:
             if len(getattr(self, action.name, [])) != self._last_update[action]:
+                if len(self.auto) > 0:
+                    self.auto_button.label = self.auto_button.label_name.format(f"({len(self.auto)})")
+                else:
+                    self.auto_button.label = "Auto"
                 new_number = len(getattr(self, action.name, []))
                 self._last_update[action] = new_number
                 if new_number != 0:

@@ -1358,13 +1358,22 @@ class Adventure(
                     Treasure(rare=1),
                     Treasure(normal=1, rare=1),
                 ]
-                if roll <= 2:
+                if roll <= 5:
+                    treasure = random.choice(available_loot)
+            elif monster_amount >= 150:
+                available_loot = [
+                    Treasure(normal=1),
+                    Treasure(rare=1),
+                    Treasure(normal=1, rare=1),
+                ]
+                if roll <= 5:
                     treasure = random.choice(available_loot)
             elif monster_amount >= 80:
-                if roll == 1:
+                if roll <= 3:
                     treasure = Treasure(normal=1)
             if crit_bonus:
                 treasure.epic += 1
+                treasure.rare += 1
             if not treasure:
                 treasure = Treasure()
         return treasure
