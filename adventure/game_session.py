@@ -88,11 +88,8 @@ class ActionButton(discord.ui.Button):
             getattr(self.view, self.action.name).append(user)
             await self.send_response(interaction)
             if user in self.view.auto:
-                print('view.auto before: ' +str(len(self.view.auto)))
                 self.view.auto.remove(user)
             await self.view.update()
-            print('view.auto after: ' +str(len(self.view.auto)))
-            print('----------------------')
         else:
             await smart_embed(message="You are already fighting this monster.", ephemeral=True, interaction=interaction)
 
