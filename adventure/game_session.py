@@ -89,6 +89,12 @@ class ActionButton(discord.ui.Button):
         if user not in getattr(self.view, self.action.name):
             getattr(self.view, self.action.name).append(user)
             await self.send_response(interaction)
+            if user in self.view.auto:
+                self.view.auto.remove(user)
+                if len(self.auto) > 0:
+                    self.auto_button.label = self.auto_button.label_name.format(f"({len(self.auto)})")
+                else:
+                    self.auto_button.label = "Auto"
             await self.view.update()
             #if user in self.view.auto:
             #    await self.view.update()
@@ -151,7 +157,7 @@ class SpecialActionButton(discord.ui.Button):
         if c.heroclass["ability"]:
             await self.send_in_use(interaction)
             return
-        cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
+        cooldown_time = max(300, (900 - max((c.luck + c.total_int) * 2, 0)))
         if "cooldown" not in c.heroclass:
             c.heroclass["cooldown"] = cooldown_time + 1
         if c.heroclass["cooldown"] <= time.time():
