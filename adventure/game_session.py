@@ -30,7 +30,6 @@ class Action(Enum):
     talk = 2
     pray = 3
     run = 4
-    #auto = 5
 
     @property
     def emoji(self):
@@ -40,7 +39,6 @@ class Action(Enum):
             Action.talk: "\N{LEFT SPEECH BUBBLE}\N{VARIATION SELECTOR-16}",
             Action.pray: "\N{PERSON WITH FOLDED HANDS}",
             Action.run: "\N{RUNNER}\N{ZERO WIDTH JOINER}\N{MALE SIGN}\N{VARIATION SELECTOR-16}",
-            #Action.auto: "\N{CLOCKWISE RIGHTWARDS AND LEFTWARDS OPEN CIRCLE ARROWS}",
         }[self]
 
 
@@ -90,14 +88,11 @@ class ActionButton(discord.ui.Button):
             getattr(self.view, self.action.name).append(user)
             await self.send_response(interaction)
             if user in self.view.auto:
+                print('view.auto before: ' +str(len(self.view.auto)))
                 self.view.auto.remove(user)
-                if len(self.auto) > 0:
-                    self.auto_button.label = self.auto_button.label_name.format(f"({len(self.auto)})")
-                else:
-                    self.auto_button.label = "Auto"
             await self.view.update()
-            #if user in self.view.auto:
-            #    await self.view.update()
+            print('view.auto after: ' +str(len(self.view.auto)))
+            print('----------------------')
         else:
             await smart_embed(message="You are already fighting this monster.", ephemeral=True, interaction=interaction)
 
@@ -632,20 +627,20 @@ class GameSession(discord.ui.View):
             Action.talk: self.talk_button,
             Action.pray: self.pray_button,
             Action.run: self.run_button,
-            #Action.auto: self.auto_button,
         }
+
         for action in Action:
             if len(getattr(self, action.name, [])) != self._last_update[action]:
-                #if len(self.auto) > 0:
-                #    self.auto_button.label = self.auto_button.label_name.format(f"({len(self.auto)})")
-                #else:
-                #    self.auto_button.label = "Auto"
                 new_number = len(getattr(self, action.name, []))
                 self._last_update[action] = new_number
                 if new_number != 0:
                     buttons[action].label = buttons[action].action.name.title() + f" ({new_number})"
                 else:
                     buttons[action].label = buttons[action].action.name.title()
+        if len(self.auto) > 0:
+            self.auto_button.label = self.auto_button.label_name.format(f"({len(self.auto)})")
+        else:
+            self.auto_button.label = "Auto"
         await self.message.edit(view=self)
 
     def in_adventure(self, user: discord.Member) -> bool:
@@ -657,7 +652,7 @@ class GameSession(discord.ui.View):
                 *self.pray,
                 *self.talk,
                 *self.run,
-                #*self.auto,
+                *self.auto,
             ]
         )
         return bool(user.id in participants_ids)
